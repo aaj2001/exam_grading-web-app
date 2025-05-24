@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fas fa-chart-bar text-primary fa-2x"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1">Start Analysis</h1>
+                <p class="text-muted mb-0">Choose your analysis type and follow the instructions</p>
+            </div>
+
+        </div>
+
+        <!-- Analysis Type Selection -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-4">Select Analysis Type</h2>
+                
+                <div class="d-flex justify-content-center mb-4">
+                    <div class="btn-group" role="group" aria-label="Analysis type selection">
+                        <button type="button" id="mcqButton" class="btn btn-outline-primary px-4">
+                            <i class="fas fa-tasks me-2"></i>MCQ Analysis
+                        </button>
+                        
+                        <button type="button" id="essayButton" class="btn btn-outline-success px-4">
+                            <i class="fas fa-pen-fancy me-2"></i>Essay Analysis
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Initial instructions have been removed -->
+                
+                <!-- Card content is dynamically replaced by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Old instruction sections removed -->
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4">
+                <i class="fas fa-arrow-left me-2"></i>Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mcqButton = document.getElementById('mcqButton');
+        const essayButton = document.getElementById('essayButton');
+        
+        // Create a container for dynamic content
+        const contentContainer = document.createElement('div');
+        contentContainer.id = 'dynamicContent';
+        contentContainer.className = 'mt-3';
+        
+        // Add container to the page after the button group
+        const buttonGroup = document.querySelector('.btn-group').parentElement;
+        buttonGroup.after(contentContainer);
+        
+        // Add event listeners to buttons
+        mcqButton.addEventListener('click', function() {
+            // Replace instruction box with MCQ analysis information
+            const mcqContent = `
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="me-3">
+                            <div class="bg-primary bg-opacity-25 p-3 rounded-circle">
+                                <i class="fas fa-tasks text-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="text-white mb-2">MCQ Analysis</h5>
+                            <p class="text-white-50 mb-0">
+                                Compare multiple-choice responses between a reference key and student answers to automatically grade and score exams.
+                            </p>
+                            <div class="mt-3 border-top border-secondary pt-3">
+                                <div class="d-flex align-items-center py-2">
+                                    <i class="fas fa-check-circle text-success me-3"></i>
+                                    <span class="text-white-50">Automatic scoring against reference answers</span>
+                                </div>
+                                <div class="d-flex align-items-center py-2">
+                                    <i class="fas fa-check-circle text-success me-3"></i>
+                                    <span class="text-white-50">Results visualization with interactive charts</span>
+                                </div>
+                                <div class="d-flex align-items-center py-2">
+                                    <i class="fas fa-check-circle text-success me-3"></i>
+                                    <span class="text-white-50">Export detailed reports in CSV format</span>
+                                </div>
+                            </div>
+                            <div class="d-grid mt-4">
+                                <a href="{{ url_for('mcq_analysis') }}" class="btn btn-primary px-4 py-2">
+                                    <i class="fas fa-arrow-right me-2"></i>Start MCQ Analysis
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            contentContainer.innerHTML = mcqContent;
+        });
+        
+        essayButton.addEventListener('click', function() {
+            // Replace instruction box with Essay analysis information
+            const essayContent = `
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="me-3">
+                            <div class="bg-success bg-opacity-25 p-3 rounded-circle">
+                                <i class="fas fa-file-alt text-success"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="text-white mb-2">Essay Analysis</h5>
+                            <p class="text-white-50 mb-0">
+                                Compare written essays against a reference model to evaluate similarity and identify potential academic dishonesty.
+                            </p>
+                            <div class="mt-3 border-top border-secondary pt-3">
+                                <div class="d-flex align-items-center py-2">
+                                    <i class="fas fa-check-circle text-success me-3"></i>
+                                    <span class="text-white-50">Text similarity scoring against reference essay</span>
+                                </div>
+                                <div class="d-flex align-items-center py-2">
+                                    <i class="fas fa-check-circle text-success me-3"></i>
+                                    <span class="text-white-50">Detection of unusually similar submissions</span>
+                                </div>
+                                <div class="d-flex align-items-center py-2">
+                                    <i class="fas fa-check-circle text-success me-3"></i>
+                                    <span class="text-white-50">Detailed reporting with visualizations</span>
+                                </div>
+                            </div>
+                            <div class="d-grid mt-4">
+                                <a href="{{ url_for('essay_analysis') }}" class="btn btn-success px-4 py-2">
+                                    <i class="fas fa-arrow-right me-2"></i>Start Essay Analysis
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            contentContainer.innerHTML = essayContent;
+        });
+    });
+</script>
+{% endblock %}

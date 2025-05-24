@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fas fa-pen-fancy text-success fa-2x"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1">Essay Analysis</h1>
+                <p class="text-muted mb-0">Evaluate essay similarities and detect potential academic dishonesty</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="card bg-light mb-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-lg text-info"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-info">How It Works</h5>
+                                <p class="mb-0 text-dark">First, upload a reference essay, then upload student essays for automatic similarity analysis and cheating detection.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if not reference_loaded %}
+                <!-- Reference Essay Upload -->
+                <div class="card border-0 shadow-sm mb-4 mt-4">
+                    <div class="card-header bg-success bg-gradient text-white">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-book fa-lg me-2"></i>
+                            <h2 class="h5 mb-0">Step 1: Upload Reference Essay</h2>
+                            <span class="ms-2 badge rounded-pill bg-light text-dark" 
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="top" 
+                                  title="This is  the correct answer that student responses will be compared against">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <p>Upload a file containing the reference or model essay that will be used to evaluate student submissions.</p>
+                        
+                        <div class="bg-dark bg-opacity-10 p-3 rounded-3 mb-4">
+                            <h6 class="mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Tip:</h6>
+                            <p class="mb-0">The reference essay should be a well-written example that students should aim to match in terms of content and structure. Use plain text (.txt) format for best results.</p>
+                        </div>
+                        
+                        <form method="POST" enctype="multipart/form-data" action="{{ url_for('essay_analysis') }}">
+                            <div class="mb-4">
+                                <label for="reference_file" class="form-label fw-bold">Reference Essay File</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success bg-opacity-10 border-0">
+                                        <i class="fas fa-file-alt text-success"></i>
+                                    </span>
+                                    <input class="form-control" type="file" id="reference_file" name="reference_file" accept=".txt" required>
+                                </div>
+                                <div class="form-text">Upload a .txt file with the reference essay</div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-success px-4">
+                                    <i class="fas fa-upload me-2"></i>Upload Reference Essay
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Student Essays Upload Form -->
+                <div class="card border-0 shadow-sm mb-4 mt-4">
+                    <div class="card-header bg-success bg-gradient text-white">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle fa-lg me-2"></i>
+                            <h2 class="h5 mb-0">Reference Essay Loaded</h2>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <h3 class="h6 mb-2">Preview of Reference Essay:</h3>
+                        <div class="bg-dark p-3 rounded-3 mb-4 position-relative">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-secondary">Reference</span>
+                            </div>
+                            <pre class="mb-0 text-light"><code>{{ preview }}</code></pre>
+                        </div>
+                        
+                        <h2 class="h5 mb-3">Step 2: Upload Student Essays</h2>
+                        <p>Upload one or more files containing student essays for comparison with the reference essay.</p>
+                        
+                        <div class="card bg-warning bg-opacity-10 mb-4 border-0">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3">
+                                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-2 text-warning">Important File Requirements</h5>
+                                        <ul class="mb-0 ps-3">
+                                            <li>You can add multiple files at once (maximum 15 files per submission)</li>
+                                            <li>Each filename will be used as the student identifier</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" enctype="multipart/form-data" action="{{ url_for('process_essays') }}" id="uploadForm">
+                            <div class="mb-4">
+                                <label for="student_files" class="form-label fw-bold">Student Essay Files</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success bg-opacity-10 border-0">
+                                        <i class="fas fa-users text-success"></i>
+                                    </span>
+                                    <input class="form-control" type="file" id="student_files" name="student_files" accept=".txt" multiple required>
+                                </div>
+                                <div id="essay_files_list" class="mt-3 small"></div>
+                                <div class="form-text">Upload .txt files with student essays (maximum 15 files per submission)</div>
+                            </div>
+                            
+                            <!-- Reference threshold removed as requested -->
+                            
+                            <div class="mb-4">
+                                <label for="cheating_threshold" class="form-label fw-bold">
+                                    <i class="fas fa-shield-alt text-danger me-1"></i>
+                                    Student Similarity Threshold
+                                </label>
+                                <div class="card bg-secondary bg-opacity-25 border-0 p-3 mb-2">
+                                    <input type="range" class="form-range" min="0" max="1" step="0.05" value="0.8" id="cheating_threshold" name="cheating_threshold" oninput="updateCheatingThreshold(this.value)">
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="badge bg-success px-3 py-2">Low (0.0)</span>
+                                        <div class="text-center">
+                                            <span class="badge bg-primary px-3 py-2">Current: <span id="cheatingThresholdValue">0.8</span></span>
+                                            <div id="cheatingThresholdDescription" class="small text-muted mt-1">High threshold - detects only very similar essays</div>
+                                        </div>
+                                        <span class="badge bg-danger px-3 py-2">High (1.0)</span>
+                                    </div>
+                                </div>
+                                <div class="form-text">Threshold for detecting similarities between student essays. Higher values will only flag essays that are extremely similar as potential cheating.</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="strictness_parameter" class="form-label fw-bold">
+                                    <i class="fas fa-sliders-h text-warning me-1"></i>
+                                    Strictness Parameter
+                                </label>
+                                <div class="card bg-secondary bg-opacity-25 border-0 p-3 mb-2">
+                                    <input type="range" class="form-range" min="0" max="1" step="0.05" value="0.5" id="strictness_parameter" name="strictness_parameter" oninput="updateStrictnessParameter(this.value)">
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="badge bg-success px-3 py-2">Lenient (0.0)</span>
+                                        <div class="text-center">
+                                            <span class="badge bg-primary px-3 py-2">Current: <span id="strictnessValue">0.5</span></span>
+                                            <div id="strictnessDescription" class="small text-muted mt-1">Balanced strictness - moderate sensitivity to similarity patterns</div>
+                                        </div>
+                                        <span class="badge bg-danger px-3 py-2">Strict (1.0)</span>
+                                    </div>
+                                </div>
+                                <div class="form-text">Controls how strictly similarities are assessed. Lower values are more lenient (ignoring minor similarities), while higher values enforce stricter assessment (flagging even slight overlaps).</div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-success px-4">
+                                    <i class="fas fa-search me-2"></i>Analyze Student Essays
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Reference threshold function removed as requested
+    
+    function updateCheatingThreshold(value) {
+        document.getElementById('cheatingThresholdValue').innerText = value;
+        
+        // Update description based on threshold value
+        const desc = document.getElementById('cheatingThresholdDescription');
+        if (value >= 0.8) {
+            desc.innerText = "High threshold - detects only very similar essays";
+        } else if (value >= 0.5) {
+            desc.innerText = "Medium threshold - balanced detection";
+        } else {
+            desc.innerText = "Low threshold - may flag more essays";
+        }
+    }
+    
+    function updateStrictnessParameter(value) {
+        document.getElementById('strictnessValue').innerText = value;
+        
+        // Update description based on strictness value
+        const desc = document.getElementById('strictnessDescription');
+        if (value >= 0.8) {
+            desc.innerText = "High strictness - flags even minor similarities";
+        } else if (value >= 0.4) {
+            desc.innerText = "Balanced strictness - moderate sensitivity to similarity patterns";
+        } else {
+            desc.innerText = "Low strictness - more lenient assessment, ignores minor similarities";
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // File input enhancement for multiple files
+        const fileInput = document.getElementById('student_files');
+        const filesList = document.getElementById('essay_files_list');
+        const form = document.getElementById('uploadForm');
+        
+        if (fileInput && filesList) {
+            // Create a FileList object that we can manipulate
+            let selectedFiles = new DataTransfer();
+            
+            fileInput.addEventListener('change', function() {
+                // Update our custom FileList
+                for (let i = 0; i < this.files.length; i++) {
+                    selectedFiles.items.add(this.files[i]);
+                }
+                
+                updateFilesList();
+            });
+            
+            function updateFilesList() {
+                const files = selectedFiles.files;
+                
+                if (files.length > 0) {
+                    let fileHtml = '<div class="card bg-light"><div class="card-header">Selected Files (' + files.length + ')</div>';
+                    fileHtml += '<ul class="list-group list-group-flush">';
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        fileHtml += '<li class="list-group-item d-flex justify-content-between align-items-center position-relative">';
+                        fileHtml += '<span><i class="fas fa-file-alt text-success me-2"></i>' + files[i].name + '</span>';
+                        fileHtml += '<div>';
+                        fileHtml += '<span class="badge bg-secondary rounded-pill me-3">' + formatFileSize(files[i].size) + '</span>';
+                        fileHtml += '<button type="button" class="btn btn-sm btn-danger remove-file" data-index="' + i + '">';
+                        fileHtml += '<i class="fas fa-times"></i>';
+                        fileHtml += '</button>';
+                        fileHtml += '</div>';
+                        fileHtml += '</li>';
+                    }
+                    
+                    fileHtml += '</ul></div>';
+                    filesList.innerHTML = fileHtml;
+                    
+                    // Check if too many files
+                    if (files.length > 15) {
+                        filesList.innerHTML += '<div class="alert alert-danger mt-2">Too many files selected. Maximum 15 files per submission allowed.</div>';
+                    }
+                    
+                    // Add event listeners to remove buttons
+                    document.querySelectorAll('.remove-file').forEach(function(button) {
+                        button.addEventListener('click', function() {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            removeFile(index);
+                        });
+                    });
+                } else {
+                    filesList.innerHTML = '';
+                }
+                
+                // Update the file input with our custom FileList
+                fileInput.files = selectedFiles.files;
+            }
+            
+            function removeFile(index) {
+                // Create a new FileList without the removed file
+                const newSelectedFiles = new DataTransfer();
+                
+                Array.from(selectedFiles.files)
+                    .filter((_, i) => i !== index)
+                    .forEach(file => newSelectedFiles.items.add(file));
+                
+                selectedFiles = newSelectedFiles;
+                updateFilesList();
+            }
+        }
+        
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Exam Grading and Analysis</title>
+    <!-- Bootstrap CSS from Replit theme -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Annotation Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background-color: #000000 !important;">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <span class="badge rounded-pill bg-primary p-2 me-2">
+                    <i class="fas fa-graduation-cap"></i>
+                </span>
+                <span class="text-gradient">Exam Analyzer</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'mcq_analysis' in request.path %}active{% endif %}" 
+                           href="{{ url_for('mcq_analysis') }}"
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="bottom" 
+                           title="Multiple choice question analysis with similarity detection">
+                            <i class="fas fa-tasks me-1"></i> MCQ Analysis
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'essay_analysis' in request.path %}active{% endif %}" 
+                           href="{{ url_for('essay_analysis') }}"
+                           data-bs-toggle="tooltip" 
+                           data-bs-placement="bottom" 
+                           title="Essay analysis with advanced similarity detection">
+                            <i class="fas fa-pen-fancy me-1"></i> Essay Analysis
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button class="btn btn-sm btn-outline-light rounded-pill btn-help" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="left" 
+                            title="View documentation and help"
+                            data-help-type="modal">
+                        <i class="fas fa-question-circle me-1"></i> Help
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer removed as requested -->
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    <!-- Initialize tooltips and manage flash messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Auto-dismiss flash messages after 5 seconds
+            var flashMessages = document.querySelectorAll('.alert-success');
+            flashMessages.forEach(function(alert) {
+                // Check if this is a reference file upload success message
+                var messageText = alert.textContent.trim();
+                if (messageText.includes('successfully uploaded')) {
+                    // Add a special class for animation
+                    alert.classList.add('temporary-alert');
+                    
+                    // Set timeout to remove the alert after 5 seconds
+                    setTimeout(function() {
+                        // Fade out animation
+                        alert.classList.add('fade-out');
+                        
+                        // Remove after animation completes
+                        setTimeout(function() {
+                            alert.remove();
+                        }, 500); // 500ms for fade out animation
+                    }, 5000); // 5 seconds
+                }
+            });
+            
+            // Add ripple effect to buttons
+            var buttons = document.querySelectorAll('.btn');
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    var x = e.clientX - e.target.getBoundingClientRect().left;
+                    var y = e.clientY - e.target.getBoundingClientRect().top;
+                    
+                    var ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(function() {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

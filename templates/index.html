@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Introduction Section -->
+<div class="container px-4 py-5">
+    <h2 class="pb-2 border-bottom">Revolutionize Your Grading Process</h2>
+    <div class="row g-4 py-5">
+        <!-- Efficiency Feature -->
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <div class="feature-icon bg-primary bg-opacity-25 p-3 rounded-circle mx-auto" style="width: 80px; height: 80px;">
+                            <i class="fas fa-tachometer-alt text-primary fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="h4 mb-3">Increase Efficiency</h3>
+                    <p class="text-muted">Grade hundreds of exams in minutes rather than hours with our automated analysis system.</p>
+                    
+                    <div class="mt-4">
+                        <div class="mb-3">
+                            <div class="position-relative overflow-hidden rounded-3" style="height: 160px;">
+                                <div class="d-flex position-absolute w-100 h-100 justify-content-center align-items-center">
+                                    <div class="position-relative" style="width: 80%;">
+                                        <div class="position-absolute top-0 start-0 p-2 bg-black bg-opacity-75 rounded-3 shadow-sm" style="transform: rotate(-3deg); z-index: 3;">
+                                            <div class="progress mb-1 rounded-pill" style="height: 8px;">
+                                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between small text-muted">
+                                                <span>Automated&nbsp; </span>
+                                                <span>3 min</span>
+                                            </div>
+                                        </div>
+                                        <div class="position-absolute top-50 start-50 p-2 bg-black bg-opacity-75 rounded-3 shadow-sm" style="transform: translateY(-50%) rotate(2deg); z-index: 2;">
+                                            <div class="progress mb-1 rounded-pill" style="height: 8px;">
+                                                <div class="progress-bar bg-warning" style="width: 15%"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between small text-muted">
+                                                <span>Manual&nbsp;</span>
+                                                <span>3 hours</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Accuracy Feature -->
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <div class="feature-icon bg-success bg-opacity-25 p-3 rounded-circle mx-auto" style="width: 80px; height: 80px;">
+                            <i class="fas fa-bullseye text-success fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="h4 mb-3">Enhance Accuracy</h3>
+                    <p class="text-muted">Ensure consistent and objective evaluation by leveraging advanced similarity algorithms.</p>
+                    
+                    <div class="mt-4">
+                        <div class="mb-3">
+                            <div class="position-relative overflow-hidden rounded-3" style="height: 160px;">
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="bg-black bg-opacity-75 rounded-4 p-3 position-relative" style="width: 80%;">
+                                        <div class="text-start mb-3">
+                                            <span class="badge bg-primary mb-2">Reference Answer</span>
+                                            <div class="border-start border-primary ps-2 py-1">
+                                                <small class="text-white-50">The earth revolves around the sun</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="text-start">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="badge bg-success mb-2">Student Answer</span>
+                                                <span class="badge bg-success">95% match</span>
+                                            </div>
+                                            <div class="border-start border-success ps-2 py-1">
+                                                <small class="text-white-50">The earth revolves around the sun</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Integrity Feature -->
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <div class="feature-icon bg-danger bg-opacity-25 p-3 rounded-circle mx-auto" style="width: 80px; height: 80px;">
+                            <i class="fas fa-shield-alt text-danger fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="h4 mb-3">Maintain Integrity</h3>
+                    <p class="text-muted">Identify potential academic dishonesty with powerful similarity detection between student submissions.</p>
+                    
+                    <div class="mt-4">
+                        <div class="mb-3">
+                            <div class="position-relative overflow-hidden rounded-3" style="height: 160px;">
+                                <div class="d-flex justify-content-center align-items-center h-100">
+                                    <div class="position-relative" style="width: 90%;">
+                                        <div class="position-absolute top-0 start-0 p-2 bg-black bg-opacity-75 rounded-3 shadow-sm" style="width: 70%; z-index: 3;">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-primary small">Student A</span>
+                                                <span class="badge bg-danger small">97% Match</span>
+                                            </div>
+                                            <div class="border-start border-primary border-2 ps-2">
+                                                <p class="small text-white-50 text-start mb-0">Photosynthesis is a process used by...</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="position-absolute bottom-0 end-0 p-2 bg-black bg-opacity-75 rounded-3 shadow-sm" style="width: 70%; z-index: 2;">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-warning small">Student B</span>
+                                                <span class="badge bg-danger small">97% Match</span>
+                                            </div>
+                                            <div class="border-start border-warning border-2 ps-2">
+                                                <p class="small text-white-50 text-start mb-0">Photosynthesis is a process used by...</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="position-absolute top-50 start-50 translate-middle">
+                                            <div class="bg-danger bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hero Section -->
+<div class="container px-4 py-5">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <h1 class="display-5 fw-bold lh-1 mb-3">Automated Exam Grading</h1>
+            <p class="lead">An intelligent solution for educators to grade exams efficiently and identify potential academic dishonesty by analyzing response patterns.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{{ url_for('start_analysis') }}" class="btn btn-primary btn-lg px-4 me-md-2">
+                    <i class="fas fa-play-circle me-2"></i>Start Analysis
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card bg-dark bg-opacity-50 border-0 rounded-4">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-graduation-cap fa-4x text-primary"></i>
+                    </div>
+                    <div class="d-flex justify-content-center gap-4 mt-3">
+                        <div class="bg-dark p-3 rounded-3">
+                            <i class="fas fa-tasks fa-2x text-primary"></i>
+                        </div>
+                        <div class="bg-dark p-3 rounded-3">
+                            <i class="fas fa-pen-fancy fa-2x text-success"></i>
+                        </div>
+                        <div class="bg-dark p-3 rounded-3">
+                            <i class="fas fa-chart-bar fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works (Interactive) -->
+<div class="container px-4 py-5">
+    <h2 class="pb-2 border-bottom">How It Works</h2>
+    <div class="row g-4 py-5">
+        <div class="col-md-4 text-center">
+            <div class="feature-step" data-step="1">
+                <div class="feature-icon p-4 rounded-circle bg-primary bg-opacity-10 mb-3 mx-auto" style="width: 100px; height: 100px;">
+                    <i class="fas fa-upload fa-3x text-primary"></i>
+                </div>
+                <h5 class="fw-bold mb-3">1. Upload Files</h5>
+                <p>Upload reference answers and student submissions</p>
+                
+                <!-- Interactive details (initially hidden) -->
+                <div class="feature-details card mt-3 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-primary">File Requirements:</h6>
+                        <ul class="text-start small mb-3">
+                            <li>Reference file: TXT or CSV format with correct answers</li>
+                            <li>Student files: Files with student name/ID in filename (max 15 per submission)</li>
+                            <li>Formats: Simple text or CSV with question numbers and answers</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <button class="btn btn-sm btn-outline-primary mt-2 toggle-details main-toggle">Learn More</button>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-center">
+            <div class="feature-step" data-step="2">
+                <div class="feature-icon p-4 rounded-circle bg-success bg-opacity-10 mb-3 mx-auto" style="width: 100px; height: 100px;">
+                    <i class="fas fa-cogs fa-3x text-success"></i>
+                </div>
+                <h5 class="fw-bold mb-3">2. Analyze</h5>
+                <p>System evaluates submissions using similarity algorithms</p>
+                
+                <!-- Interactive details (initially hidden) -->
+                <div class="feature-details card mt-3 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-success">Analysis Features:</h6>
+                        <ul class="text-start small mb-3">
+                            <li>MCQ analysis: Compares answers to reference key for scoring</li>
+                            <li>Essay analysis: Evaluates text similarity with reference</li>
+                            <li>Adjustable threshold for cheating detection sensitivity</li>
+                            <li>Fully automated process - no manual grading needed</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <button class="btn btn-sm btn-outline-success mt-2 toggle-details main-toggle">Learn More</button>
+            </div>
+        </div>
+        
+        <div class="col-md-4 text-center">
+            <div class="feature-step" data-step="3">
+                <div class="feature-icon p-4 rounded-circle bg-info bg-opacity-10 mb-3 mx-auto" style="width: 100px; height: 100px;">
+                    <i class="fas fa-chart-bar fa-3x text-info"></i>
+                </div>
+                <h5 class="fw-bold mb-3">3. View Results</h5>
+                <p>Explore detailed analysis with charts and visualizations</p>
+                
+                <!-- Interactive details (initially hidden) -->
+                <div class="feature-details card mt-3 border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-info">Results Include:</h6>
+                        <ul class="text-start small mb-3">
+                            <li>Individual student scores and similarity metrics</li>
+                            <li>Side-by-side comparison with reference answers</li>
+                            <li>Potential academic dishonesty flags and reports</li>
+                            <li>Downloadable CSV reports for further analysis</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <button class="btn btn-sm btn-outline-info mt-2 toggle-details main-toggle">Learn More</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center mb-4">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="fas fa-tasks text-primary fa-2x"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1">MCQ Analysis</h1>
+                <p class="text-muted mb-0">Grade multiple-choice questions automatically</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="card bg-light mb-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-info-circle fa-lg text-info"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-info">How It Works</h5>
+                                <p class="mb-0 text-dark">First, upload reference answers, then upload student answer files for automatic analysis and grading. Our analysis technology will calculate scores based on answer similarity.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if not reference_loaded %}
+                <!-- Reference Answer Upload -->
+                <div class="card border-0 shadow-sm mb-4 mt-4">
+                    <div class="card-header bg-primary bg-gradient text-white">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-key fa-lg me-2"></i>
+                            <h2 class="h5 mb-0">Step 1: Upload Reference Answers</h2>
+                            <span class="ms-2 badge rounded-pill bg-light text-dark" 
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="top" 
+                                  title="These are the correct answers that student responses will be compared against">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <p>Upload a file containing the correct answers for MCQ questions.</p>
+                        
+                        <div class="bg-dark bg-opacity-10 p-3 rounded-3 mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <h6 class="mb-0">File Format Examples:</h6>
+                                <span class="ms-2 badge rounded-pill bg-info" 
+                                      data-bs-toggle="tooltip" 
+                                      data-bs-placement="top" 
+                                      title="Your file must match one of these formats exactly">
+                                    <i class="fas fa-info-circle"></i>
+                                </span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <div class="card bg-dark mb-0">
+                                        <div class="card-header py-2">
+                                            <h6 class="mb-0 text-muted">CSV Format</h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <pre class="mb-0"><code>1,A
+2,C
+3,B</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-dark mb-0">
+                                        <div class="card-header py-2">
+                                            <h6 class="mb-0 text-muted">TXT Format</h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <pre class="mb-0"><code>1: A
+2: C
+3: B</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" enctype="multipart/form-data" action="{{ url_for('mcq_analysis') }}" id="referenceForm">
+                            <div class="mb-4">
+                                <label for="reference_file" class="form-label fw-bold">
+                                    Reference Answer File
+                                    <span class="ms-1 text-info" 
+                                          data-bs-toggle="tooltip" 
+                                          data-bs-placement="top" 
+                                          title="Upload a single file with all correct answers">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-primary bg-opacity-10 border-0">
+                                        <i class="fas fa-file-alt text-primary"></i>
+                                    </span>
+                                    <input class="form-control custom-file-input" 
+                                           type="file" 
+                                           id="reference_file" 
+                                           name="reference_file" 
+                                           accept=".txt,.csv" 
+                                           data-file-list="reference_file_list"
+                                           required>
+                                </div>
+                                <div id="reference_file_list" class="mt-2"></div>
+                                <div class="form-text">Upload a .txt or .csv file with the correct answers for all questions</div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="fas fa-upload me-2"></i>Upload Reference
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Student Answers Upload Form -->
+                <div class="card border-0 shadow-sm mb-4 mt-4">
+                    <div class="card-header bg-success bg-gradient text-white">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle fa-lg me-2"></i>
+                            <h2 class="h5 mb-0">Loaded {{ question_count }} questions</h2>
+                            <span class="ms-2 badge rounded-pill bg-light text-success" 
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="top" 
+                                  title="Reference file successfully loaded with {{ question_count }} questions">
+                                <i class="fas fa-check"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <h2 class="h5 mb-0">Step 2: Upload Student Answers</h2>
+                            <span class="ms-2 badge rounded-pill bg-info" 
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="top" 
+                                  title="Upload student answer files in the same format as the reference file">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </div>
+                        <p>Upload one or more files containing student answers in the same format as the reference file.</p>
+                        
+                        <div class="card bg-warning bg-opacity-10 mb-4 border-0">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3">
+                                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-2 text-warning">Important File Requirements</h5>
+                                        <ul class="mb-0 ps-3">
+                                            <li>You can add multiple files at once (maximum 15 files per submission)</li>
+                                            <li>Each filename will be used as the student identifier</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" enctype="multipart/form-data" action="{{ url_for('process_mcq_answers') }}" id="uploadForm">
+                            <div class="mb-4">
+                                <label for="student_files" class="form-label fw-bold">
+                                    Student Answer Files
+                                    <span class="ms-1 text-info" 
+                                          data-bs-toggle="tooltip" 
+                                          data-bs-placement="top" 
+                                          title="You can select multiple files at once by holding Ctrl (or Cmd on Mac) while selecting">
+                                        <i class="fas fa-question-circle"></i>
+                                    </span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-primary bg-opacity-10 border-0">
+                                        <i class="fas fa-users text-primary"></i>
+                                    </span>
+                                    <input class="form-control custom-file-input" 
+                                           type="file" 
+                                           id="student_files" 
+                                           name="student_files" 
+                                           accept=".txt,.csv" 
+                                           data-file-list="selected_files_list"
+                                           multiple 
+                                           required>
+                                </div>
+                                <div id="selected_files_list" class="mt-3 small"></div>
+                                <div class="form-text">Upload .txt or .csv files with student answers (maximum 15 files per submission)</div>
+                            </div>
+                            
+                            <!-- Threshold slider removed as requested -->
+                            
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="submit" class="btn btn-primary px-4 btn-lg">
+                                    <i class="fas fa-chart-bar me-2"></i>Analyze Student Answers
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Threshold function removed as requested
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // File input enhancement for multiple files
+        const fileInput = document.getElementById('student_files');
+        const filesList = document.getElementById('selected_files_list');
+        const form = document.getElementById('uploadForm');
+        
+        if (fileInput && filesList) {
+            // Create a FileList object that we can manipulate
+            let selectedFiles = new DataTransfer();
+            
+            fileInput.addEventListener('change', function() {
+                // Update our custom FileList
+                for (let i = 0; i < this.files.length; i++) {
+                    selectedFiles.items.add(this.files[i]);
+                }
+                
+                updateFilesList();
+            });
+            
+            function updateFilesList() {
+                const files = selectedFiles.files;
+                
+                if (files.length > 0) {
+                    let fileHtml = '<div class="card bg-light"><div class="card-header">Selected Files (' + files.length + ')</div>';
+                    fileHtml += '<ul class="list-group list-group-flush">';
+                    
+                    for (let i = 0; i < files.length; i++) {
+                        fileHtml += '<li class="list-group-item d-flex justify-content-between align-items-center position-relative">';
+                        fileHtml += '<span><i class="fas fa-file-alt text-primary me-2"></i>' + files[i].name + '</span>';
+                        fileHtml += '<div>';
+                        fileHtml += '<span class="badge bg-secondary rounded-pill me-3">' + formatFileSize(files[i].size) + '</span>';
+                        fileHtml += '<button type="button" class="btn btn-sm btn-danger remove-file" data-index="' + i + '">';
+                        fileHtml += '<i class="fas fa-times"></i>';
+                        fileHtml += '</button>';
+                        fileHtml += '</div>';
+                        fileHtml += '</li>';
+                    }
+                    
+                    fileHtml += '</ul></div>';
+                    filesList.innerHTML = fileHtml;
+                    
+                    // Check if too many files
+                    if (files.length > 15) {
+                        filesList.innerHTML += '<div class="alert alert-danger mt-2">Too many files selected. Maximum 15 files per submission allowed.</div>';
+                    }
+                    
+                    // Add event listeners to remove buttons
+                    document.querySelectorAll('.remove-file').forEach(function(button) {
+                        button.addEventListener('click', function() {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            removeFile(index);
+                        });
+                    });
+                } else {
+                    filesList.innerHTML = '';
+                }
+                
+                // Update the file input with our custom FileList
+                fileInput.files = selectedFiles.files;
+            }
+            
+            function removeFile(index) {
+                // Create a new FileList without the removed file
+                const newSelectedFiles = new DataTransfer();
+                
+                Array.from(selectedFiles.files)
+                    .filter((_, i) => i !== index)
+                    .forEach(file => newSelectedFiles.items.add(file));
+                
+                selectedFiles = newSelectedFiles;
+                updateFilesList();
+            }
+        }
+        
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+    });
+</script>
+{% endblock %}
