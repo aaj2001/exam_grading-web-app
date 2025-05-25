@@ -219,6 +219,7 @@
                                         <th>Student A</th>
                                         <th>Student B</th>
                                         <th>Similarity</th>
+                                        <th>Details</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -239,6 +240,14 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="showEssaySimilarity('{{ students[0] }}', '{{ students[1] }}', {{ loop.index0 }})"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#essaySimilarityModal">
+                                                <i class="fas fa-search me-1"></i>View Details
+                                            </button>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -251,6 +260,66 @@
                     <i class="fas fa-check-circle me-2"></i>No suspicious similarities detected between student responses.
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Essay Similarity Details Modal -->
+<div class="modal fade" id="essaySimilarityModal" tabindex="-1" aria-labelledby="essaySimilarityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="essaySimilarityModalLabel">
+                    <i class="fas fa-balance-scale me-2"></i>Essay Similarity Analysis
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Analysis Method:</strong> The system compares essays using text similarity algorithms to identify potential overlaps. 
+                    Highlighted sections show areas of high similarity between the two submissions.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary" id="student1Name">Student A Essay</h6>
+                        <div class="border p-3 bg-light" style="height: 400px; overflow-y: auto;">
+                            <div id="student1Essay" class="essay-content"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success" id="student2Name">Student B Essay</h6>
+                        <div class="border p-3 bg-light" style="height: 400px; overflow-y: auto;">
+                            <div id="student2Essay" class="essay-content"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-danger" id="similarityPercentage">0%</h5>
+                                    <p class="card-text small text-muted">Overall Similarity</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="alert alert-warning">
+                                <small>
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Important:</strong> High similarity doesn't automatically indicate plagiarism. Students may have similar ideas when following the same assignment guidelines or using common reference materials.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -301,6 +370,65 @@
         });
         document.getElementById('student-' + prevIndex).style.display = 'block';
         document.getElementById('current-index').textContent = (prevIndex + 1);
+    }
+    
+    {% if analysis_type == 'essay' and results %}
+    // Store essay submissions for detailed comparison
+    const essaySubmissions = {
+        {% for student_name, similarity in results.items() %}
+        '{{ student_name }}': `{{ session.get('essay_submissions', {}).get(student_name, 'Essay content not available') | replace('\n', '\\n') | replace('\r', '') | replace('`', '\\`') }}`,
+        {% endfor %}
+    };
+    
+    // Store cheating report data
+    const cheatingData = {
+        {% for pair, similarity in cheating_report.items() if cheating_report %}
+        '{{ pair }}': {{ similarity }},
+        {% endfor %}
+    };
+    {% endif %}
+    
+    function showEssaySimilarity(student1, student2, index) {
+        // Update modal title and student names
+        document.getElementById('student1Name').textContent = student1 + ' Essay';
+        document.getElementById('student2Name').textContent = student2 + ' Essay';
+        
+        // Get essays from stored submissions
+        const essay1 = essaySubmissions[student1] || 'Essay content not available';
+        const essay2 = essaySubmissions[student2] || 'Essay content not available';
+        
+        // Display essays with basic highlighting for similar sections
+        document.getElementById('student1Essay').innerHTML = highlightSimilarSections(essay1, essay2, 'primary');
+        document.getElementById('student2Essay').innerHTML = highlightSimilarSections(essay2, essay1, 'success');
+        
+        // Get similarity percentage
+        const pairKey = student1 + ' - ' + student2;
+        const reversePairKey = student2 + ' - ' + student1;
+        const similarity = cheatingData[pairKey] || cheatingData[reversePairKey] || 0;
+        
+        document.getElementById('similarityPercentage').textContent = (similarity * 100).toFixed(1) + '%';
+    }
+    
+    function highlightSimilarSections(text1, text2, colorClass) {
+        // Simple word-level comparison for highlighting
+        const words1 = text1.split(/\s+/);
+        const words2 = text2.split(/\s+/);
+        
+        let highlightedText = '';
+        
+        words1.forEach((word, index) => {
+            // Check if this word appears in the other essay
+            const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+            const hasMatch = words2.some(w2 => w2.toLowerCase().replace(/[^\w]/g, '') === cleanWord && cleanWord.length > 3);
+            
+            if (hasMatch && cleanWord.length > 3) {
+                highlightedText += `<span class="bg-${colorClass} bg-opacity-25 px-1 rounded">${word}</span> `;
+            } else {
+                highlightedText += word + ' ';
+            }
+        });
+        
+        return highlightedText;
     }
 </script>
 {% endblock %}
