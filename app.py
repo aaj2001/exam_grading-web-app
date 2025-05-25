@@ -1,9 +1,12 @@
 import io
 import os
 import csv
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
-#!session! مكان لتخزين بيانات مؤقتة
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 from similarity import (
     analyze_essays_levenshtein, 
     analyze_mcq_jaccard, 
@@ -11,12 +14,47 @@ from similarity import (
     detect_cheating_mcq
 )
 
-# create Flask app
+# Create Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "a_default_secret_key")    
+app.secret_key = os.environ.get("SESSION_SECRET", "a_default_secret_key")
 
-# configure file upload
+# Database configuration - Using SQLite for reliable local storage
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///exam_grader.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)    
+
+# Configure file upload
 ALLOWED_EXTENSIONS = {'txt', 'csv'}
+
+# Database Models
+class User(db.Model):
+    __tablename__ = 'user'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Exam(db.Model):
+    __tablename__ = 'exam'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=True)  # Made nullable to work with existing data
+    exam_type = db.Column(db.String(20), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, nullable=True)  # Made nullable for compatibility
+    reference_content = db.Column(db.Text, nullable=True)
+    results_data = db.Column(db.Text, nullable=True)
+    cheating_data = db.Column(db.Text, nullable=True)
+
+# Login required decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def allowed_file(filename):
     """Check if filename has an allowed extension"""
@@ -46,11 +84,102 @@ def parse_file_content(content, is_csv):
                 result[parts[0].strip()] = parts[1].strip()
     return result
 
+# Authentication routes
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        # Validation
+        if password != confirm_password:
+            flash('Passwords do not match!', 'danger')
+            return render_template('register.html')
+        
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists!', 'danger')
+            return render_template('register.html')
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered!', 'danger')
+            return render_template('register.html')
+        
+        # Create new user
+        try:
+            password_hash = generate_password_hash(password)
+            new_user = User()
+            new_user.username = username
+            new_user.email = email
+            new_user.password_hash = password_hash
+            db.session.add(new_user)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('Registration failed. Please try again.', 'danger')
+            return render_template('register.html')
+        
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash(f'Welcome back, {user.username}!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid username or password!', 'danger')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    user = User.query.get(session['user_id'])
+    if user:
+        # Only show exams that belong to this user
+        recent_exams = Exam.query.filter_by(user_id=user.id).order_by(Exam.created_at.desc()).limit(5).all()
+    else:
+        recent_exams = []
+    return render_template('dashboard.html', user=user, recent_exams=recent_exams)
+
 @app.route('/')
 def index():
+    if 'user_id' in session:
+        return redirect(url_for('dashboard'))
     return render_template('index.html')
 
+# Initialize database tables
+def init_db():
+    with app.app_context():
+        try:
+            db.create_all()
+            print("Database tables created successfully!")
+        except Exception as e:
+            print(f"Database initialization error: {e}")
+
+# Call database initialization
+init_db()
+
 @app.route('/start_analysis')
+@login_required
 def start_analysis():
     # get analysis type 
     analysis_type = request.args.get('type', None)
@@ -62,6 +191,7 @@ def start_analysis():
     return render_template('start_analysis.html', analysis_type=analysis_type)
 
 @app.route('/mcq_analysis', methods=['GET', 'POST'])
+@login_required
 def mcq_analysis():
     if request.method == 'POST':
         # check if the post request has the reference file
@@ -161,14 +291,30 @@ def process_mcq_answers():
     # detect potential cheating in mcq answers
     cheating_report = detect_cheating_mcq(student_answers, similarity_threshold)
     
-    session['mcq_results'] = results#!session! بنخزن فيها قيم rsult,ref ans,cheat rep 
+    session['mcq_results'] = results
     session['mcq_reference_answers'] = reference_answers
     session['mcq_cheating_report'] = cheating_report
-    #طول ما اليوزر ما عمل ريلود للصفحه ... هتكون البيانات موجوده في السيشن
     
-    return redirect(url_for('show_results', analysis_type='mcq'))#بنوديه عصفحة النتائج
+    # Save exam to database for history
+    try:
+        import json
+        new_exam = Exam()
+        new_exam.title = f"MCQ Analysis - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
+        new_exam.exam_type = 'mcq'
+        new_exam.user_id = session['user_id']
+        new_exam.reference_content = json.dumps(reference_answers)
+        new_exam.results_data = json.dumps(results)
+        new_exam.cheating_data = json.dumps(cheating_report)
+        
+        db.session.add(new_exam)
+        db.session.commit()
+    except Exception as e:
+        print(f"Error saving exam to database: {e}")
+    
+    return redirect(url_for('show_results', analysis_type='mcq'))
 
 @app.route('/essay_analysis', methods=['GET', 'POST'])
+@login_required
 def essay_analysis():
     if request.method == 'POST':
         # check if the post request has the reference file
@@ -275,15 +421,46 @@ def process_essays():
     session['essay_strictness_parameter'] = strictness_parameter
     session['essay_cheating_report'] = cheating_report
     
-     # redirect to results page
+    # Save exam to database for history
+    try:
+        import json
+        new_exam = Exam()
+        new_exam.title = f"Essay Analysis - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}"
+        new_exam.exam_type = 'essay'
+        new_exam.user_id = session['user_id']
+        new_exam.reference_content = reference_essay  # Store the reference essay text
+        new_exam.results_data = json.dumps(results)
+        new_exam.cheating_data = json.dumps(cheating_report)
+        
+        db.session.add(new_exam)
+        db.session.commit()
+    except Exception as e:
+        print(f"Error saving exam to database: {e}")
+    
+    # redirect to results page
     return redirect(url_for('show_results', analysis_type='essay'))
 
 @app.route('/results/<analysis_type>')
+@login_required
 def show_results(analysis_type):
     if analysis_type == 'mcq':
+        # First try to get from session (for immediate results after analysis)
         results = session.get('mcq_results', None)
         reference_answers = session.get('mcq_reference_answers', None)
         cheating_report = session.get('mcq_cheating_report', None)
+        
+        # If not in session, get the latest exam from database
+        if not results:
+            latest_exam = Exam.query.filter_by(
+                user_id=session['user_id'], 
+                exam_type='mcq'
+            ).order_by(Exam.created_at.desc()).first()
+            
+            if latest_exam and latest_exam.results_data:
+                import json
+                results = json.loads(latest_exam.results_data)
+                reference_answers = json.loads(latest_exam.reference_content) if latest_exam.reference_content else None
+                cheating_report = json.loads(latest_exam.cheating_data) if latest_exam.cheating_data else None
         
         if not results:
             flash('No MCQ analysis results found. Please upload and analyze files first.', 'danger')
@@ -319,7 +496,28 @@ def show_results(analysis_type):
                               cheating_report=cheating_report)
     
     elif analysis_type == 'essay':
+        # First try to get from session (for immediate results after analysis)
         results = session.get('essay_results', None)
+        reference_essay = session.get('reference_essay')
+        cheating_report = session.get('essay_cheating_report')
+        cheating_threshold = session.get('essay_cheating_threshold', 0.8)
+        strictness_parameter = session.get('essay_strictness_parameter', 0.5)
+        
+        # If not in session, get the latest exam from database
+        if not results:
+            latest_exam = Exam.query.filter_by(
+                user_id=session['user_id'], 
+                exam_type='essay'
+            ).order_by(Exam.created_at.desc()).first()
+            
+            if latest_exam and latest_exam.results_data:
+                import json
+                results = json.loads(latest_exam.results_data)
+                reference_essay = latest_exam.reference_content
+                cheating_report = json.loads(latest_exam.cheating_data) if latest_exam.cheating_data else None
+                # Use default values for threshold and strictness when loading from database
+                cheating_threshold = 0.8
+                strictness_parameter = 0.5
         
         if not results:
             flash('No essay analysis results found. Please upload and analyze files first.', 'danger')
@@ -328,10 +526,10 @@ def show_results(analysis_type):
         return render_template('results.html', 
                               analysis_type='essay', 
                               results=results, 
-                              reference_essay=session.get('reference_essay'),
-                              cheating_report=session.get('essay_cheating_report'),
-                              cheating_threshold=session.get('essay_cheating_threshold', 0.8),
-                              strictness_parameter=session.get('essay_strictness_parameter', 0.5))
+                              reference_essay=reference_essay,
+                              cheating_report=cheating_report,
+                              cheating_threshold=cheating_threshold,
+                              strictness_parameter=strictness_parameter)
     
     else:
         flash('Invalid analysis type', 'danger')
