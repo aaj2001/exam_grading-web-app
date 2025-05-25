@@ -34,11 +34,6 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('index') }}">
-                            <i class="fas fa-home me-1"></i> Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link {% if 'mcq_analysis' in request.path %}active{% endif %}" 
                            href="{{ url_for('mcq_analysis') }}"
                            data-bs-toggle="tooltip" 
@@ -57,7 +52,25 @@
                         </a>
                     </li>
                 </ul>
-                <div class="d-flex">
+                <div class="d-flex align-items-center">
+                    {% if session.user_id %}
+                        <span class="navbar-text me-3">
+                            <i class="fas fa-user me-1"></i>Hello, {{ session.username }}
+                        </span>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-info me-2">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger me-2">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-sm btn-success me-2">
+                            <i class="fas fa-user-plus me-1"></i>Register
+                        </a>
+                    {% endif %}
                     <button class="btn btn-sm btn-outline-light rounded-pill btn-help" 
                             data-bs-toggle="tooltip" 
                             data-bs-placement="left" 
@@ -75,7 +88,8 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <div class="alert alert-{{ category }} alert-dismissible fade show flash-message" role="alert" style="animation: slideInDown 0.5s ease-out;">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% elif category == 'warning' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -97,6 +111,56 @@
     <!-- Custom JavaScript -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     
+    <!-- CSS for flash message animations -->
+    <style>
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+        
+        .flash-message {
+            border-left: 4px solid;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .flash-message.alert-success {
+            border-left-color: #28a745;
+        }
+        
+        .flash-message.alert-danger {
+            border-left-color: #dc3545;
+        }
+        
+        .flash-message.alert-warning {
+            border-left-color: #ffc107;
+        }
+        
+        .flash-message.alert-info {
+            border-left-color: #17a2b8;
+        }
+        
+        .flash-message.fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+    </style>
+
     <!-- Initialize tooltips and manage flash messages -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -106,27 +170,32 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
             
-            // Auto-dismiss flash messages after 5 seconds
-            var flashMessages = document.querySelectorAll('.alert-success');
-            flashMessages.forEach(function(alert) {
-                // Check if this is a reference file upload success message
-                var messageText = alert.textContent.trim();
-                if (messageText.includes('successfully uploaded')) {
-                    // Add a special class for animation
-                    alert.classList.add('temporary-alert');
-                    
-                    // Set timeout to remove the alert after 5 seconds
-                    setTimeout(function() {
-                        // Fade out animation
-                        alert.classList.add('fade-out');
-                        
-                        // Remove after animation completes
+            // Auto-dismiss flash messages
+            function autoHideFlashMessages() {
+                var flashMessages = document.querySelectorAll('.flash-message');
+                if (flashMessages.length > 0) {
+                    flashMessages.forEach(function(alert) {
+                        // Set up auto-hide for each message
                         setTimeout(function() {
-                            alert.remove();
-                        }, 500); // 500ms for fade out animation
-                    }, 5000); // 5 seconds
+                            if (alert && alert.parentNode) {
+                                alert.style.transition = 'all 0.5s ease-out';
+                                alert.style.opacity = '0';
+                                alert.style.transform = 'translateY(-20px)';
+                                
+                                setTimeout(function() {
+                                    if (alert && alert.parentNode) {
+                                        alert.remove();
+                                    }
+                                }, 500);
+                            }
+                        }, 4000);
+                    });
                 }
-            });
+            }
+            
+            // Call immediately and also after a short delay to catch any late-loading messages
+            autoHideFlashMessages();
+            setTimeout(autoHideFlashMessages, 100);
             
             // Add ripple effect to buttons
             var buttons = document.querySelectorAll('.btn');

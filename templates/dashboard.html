@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Automated Exam Grading{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2 class="mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>Welcome, {{ user.username }}!
+                    </h2>
+                    <p class="mb-0 mt-2">Manage your exam grading and view your analysis history</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Automated Exam Grading Introduction -->
+    <div class="row mb-4">
+        <div class="col-lg-7 mb-4">
+            <div class="card bg-dark border-0 h-100">
+                <div class="card-body d-flex flex-column justify-content-center p-5">
+                    <h2 class="text-white mb-3">Automated Exam Grading</h2>
+                    <p class="text-light mb-4 lead">
+                        An intelligent solution for educators to grade exams efficiently and identify potential academic dishonesty by analyzing response patterns.
+                    </p>
+                    <div class="mb-4">
+                        <a href="{{ url_for('start_analysis') }}" class="btn btn-primary btn-lg rounded-pill px-4">
+                            <i class="fas fa-play me-2"></i>Start Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-5 mb-4">
+            <div class="card bg-secondary border-0 h-100">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-graduation-cap fa-4x text-primary mb-3"></i>
+                    </div>
+                    <div class="row g-3 w-100">
+                        <div class="col-4 text-center">
+                            <div class="p-3 bg-dark rounded">
+                                <i class="fas fa-list-ul fa-2x text-info"></i>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-3 bg-dark rounded">
+                                <i class="fas fa-pen-fancy fa-2x text-success"></i>
+                            </div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="p-3 bg-dark rounded">
+                                <i class="fas fa-chart-line fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Exams -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Exam Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_exams %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Exam Title</th>
+                                        <th>Type</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exam in recent_exams %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ exam.title }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if exam.exam_type == 'mcq' %}
+                                                <span class="badge bg-primary">MCQ</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Essay</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ exam.created_at.strftime('%B %d, %Y at %I:%M %p') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('show_results', analysis_type=exam.exam_type) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>View Results
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No exam analysis history yet</h6>
+                            <p class="text-muted">Start your first analysis to see results here</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
