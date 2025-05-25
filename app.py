@@ -431,6 +431,7 @@ def process_essays():
     session['essay_cheating_threshold'] = cheating_threshold
     session['essay_strictness_parameter'] = strictness_parameter
     session['essay_cheating_report'] = cheating_report
+    session['essay_submissions'] = student_essays  # Store actual essay content for detailed view
     
     # Save exam to database for history
     try:
