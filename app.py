@@ -18,8 +18,19 @@ from similarity import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "a_default_secret_key")
 
-# Database configuration - Using SQLite for reliable local storage
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///exam_grader.db'
+# Database configuration - Use PostgreSQL for production, SQLite for local development
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    # Production environment (Render) - use PostgreSQL
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+else:
+    # Local development - use SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///exam_grader.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)    
 
