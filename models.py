@@ -1,12 +1,12 @@
 from datetime import datetime
-from main import db
+from app import db
 
 class Exam(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    exam_type = db.Column(db.String(20), nullable=False)  # 'mcq' or 'essay'
+    exam_type = db.Column(db.String(20), nullable=False) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    reference_file = db.Column(db.Text, nullable=True)  # Store reference content
+    reference_file = db.Column(db.Text, nullable=True)  
     results = db.relationship('Result', backref='exam', lazy=True)
 
     def __repr__(self):
