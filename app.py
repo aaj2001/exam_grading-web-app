@@ -528,7 +528,6 @@ def download_results(analysis_type):# تنزيل النتائج
     # اول اشي بنجرب ناخذ الداتا من السيشن
     results = session.get(f'{analysis_type}_results')
     cheating_report = session.get(f'{analysis_type}_cheating_report')
-    flash(f"Student A : {student_a}", 'info')
 
     if not results: # اذا ما كان في نتائج
         flash(f'No {analysis_type} results found', 'danger')
