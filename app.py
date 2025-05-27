@@ -557,6 +557,10 @@ def download_results(analysis_type):# تنزيل النتائج
 
         for pair, similarity in cheating_report.items(): # for pair لطالبين 
             student_a, student_b = pair.split(' - ') #  بفصل الاسمين  عن بعض بعدل اول -
+            if analysis_type = 'essay':
+                student_a_content= session.get('essay_submissions', {}).get(student_a, 'Content not found')
+            else:
+                student_a_answers = results.get(student_a, {}).get('student_raw_answers', {})
             writer.writerow([student_a, student_b, f"{similarity:.2f}"]) # بنكتب  صف جديد فيه  3 اعمده همو الطالب الاول, الطالب الثاني و نسبة التشابه
 
     # تجهيز تنزيل الملف
